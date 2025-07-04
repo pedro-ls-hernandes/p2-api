@@ -1,0 +1,61 @@
+# Definição da versão da API do Kubernetes para Deployment
+apiVersion: apps/v1
+kind: Deployment
+# Metadados do Deployment
+metadata:
+  name: mongodb-deploy # nome do deployment
+# Labels para identificar e organizar o recurso
+  labels:
+    app: mongodb
+# Especificações do Deployment
+spec:
+  # Número de pods que devem estar rodando
+  replicas: 1
+  # Seletor que define quais pods este deployment gerencia
+  selector:
+    matchLabels:
+      app: mongodb
+  # Template para criação dos pods
+  template:
+    # Metadados aplicados aos pods criados
+    metadata:
+      labels:
+        app: mongodb
+    # Especificações dos pods
+    spec:
+      # Lista de containers que rodarão no pod
+      containers:
+      - name: mongodb         # nome do container
+        image: mongo:latest   # imagem do MongoDB
+        ports:                # portas do container
+        - containerPort: 27017 # porta padrão do MongoDB
+        env:                  
+        # Variáveis de ambiente
+        - name: MONGO_INITDB_ROOT_USERNAME  
+          value: root
+          valueFrom: 
+            secretKeyRef: 
+              name: mongodb-secret
+              key: mongo-root-username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongo-root-password
+---
+# Service para expor o MongoDB para outros pods no cluster
+apiVersion: v1
+kind: Service
+# Metadados do Service
+metadata:
+  name: mongodb # nome do service
+# Especificações do Service
+spec:
+  selector:
+    # Seletor para conectar com os pods corretos
+    app: mongodb
+  ports: 
+  # Configuração das portas
+    - protocol: TCP     # protocolo de comunicação
+      port: 27017       # porta dentro do container
+      targetPort: 27017 # porta do container

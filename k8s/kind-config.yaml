@@ -1,0 +1,16 @@
+#configuração personalizada do cluster kind
+kind: Cluster
+apiVersion: kind.x-k8s.io/vlalpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      #porta do container Docker Kind
+      - containerPort: 30080
+        #porta acessivel no seu navegador
+        hostPort: 30080
+        protocol: TCP
+
+      #porta externa mongo
+      - containerPort: 27017
+        hostport: 27017
+        protocol: TCP

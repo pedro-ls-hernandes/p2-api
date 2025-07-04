@@ -1,0 +1,54 @@
+# Definição da versão da API do Kubernetes para Deployment
+apiVersion: apps/v1
+kind: Deployment
+# Metadados do Deployment
+metadata:
+  # Nome do deployment no namespace
+  name: nodeapp-deploy
+  # Labels para identificar e organizar o recurso
+  labels:
+    app: nodeapp
+# Especificações do Deployment
+spec:
+  # Número de pods que devem estar rodando
+  replicas: 1
+  # Seletor que define quais pods este deployment gerencia
+  selector:
+    matchLabels:
+      app: nodeapp
+  # Template para criação dos pods
+  template:
+    # Metadados aplicados aos pods criados
+    metadata:
+      labels:
+        app: nodeapp
+    # Especificações dos pods
+    spec:
+      # Lista de containers que rodarão no pod
+      containers:
+        - name: nodeserver # nome do container
+          # Imagem customizada criada no Docker Hub
+          image: pedrolshernandes/api-p2:latest #meuusergithub/repositorio:tag
+          # Portas expostas pelo container
+          ports:
+            - containerPort: 5000
+---
+# Service para expor a aplicação Node.js para fora do cluster
+apiVersion: v1
+kind: Service
+# Metadados do Service
+metadata:
+  # Nome do service
+  name: nodeapp
+# Especificações do Service
+spec:
+  # Tipo NodePort para expor externamente com porta específica
+  type: NodePort
+  # Configuração das portas
+  ports:
+    - port: 5000               #porta dentro do container
+      targetPort: 5000         #porta do container
+      nodePort: 30080        #porta no host(mapeada)
+  # Seletor para conectar com os pods corretos
+  selector:
+    app: nodeapp #conecta com os pods
