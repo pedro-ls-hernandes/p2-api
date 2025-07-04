@@ -1,0 +1,26 @@
+name: Automação do DockerHub com Github Actions #Nome do workflow
+
+on: #Gatilho do workflow que acontece quando ocorre um push na branch main
+  push:
+    branches:
+      - main
+
+jobs: #Define os serviços que serão executados
+  login:
+    runs-on: ubuntu-latest #Define o sistema operacional que será utilizado
+
+    steps:
+      - name: Checagem do token #Checha se o token do DockerHub está correto
+        uses: actions/checkout@v4
+
+      - name: Login no DockerHub #Faz o login no DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Construção da imagem #Constroi a imagem do Docker
+        run: docker build -t pedrolshernandes/api-p2:latest .
+
+      - name: Push da imagem para o Docker Hub #Faz o push da imagem para o DockerHub
+        run: docker image push pedrolshernandes/api-p2:latest
