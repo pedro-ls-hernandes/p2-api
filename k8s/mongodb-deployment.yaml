@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Secret
-metadata:
+metadata: # Define o segredo para armazenar as credenciais do MongoDB
   name: mongodb-secret
 type: Opaque
-stringData: # Use stringData para dados que não precisam ser base64 encodados previamente
+stringData: # Define os dados secretos para o MongoDB
   mongo-root-username: admin
   mongo-root-password: password
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
+apiVersion: v1 
+kind: PersistentVolumeClaim # Define a Reivindicação de Volume Persistente
 metadata:
   name: mongodb-pvc
 spec:
@@ -29,46 +29,46 @@ spec:
   selector:
     matchLabels:
       app: mongodb
-  template:
+  template: # Define o template do pod
     metadata:
       labels:
         app: mongodb
-    spec:
-      containers:
+    spec: 
+      containers: # define os containers que serão executados no pod
       - name: mongodb
         image: mongo:latest
-        ports:
+        ports: # porta do container
         - containerPort: 27017
         env:
-        - name: MONGO_INITDB_ROOT_USERNAME
+        - name: MONGO_INITDB_ROOT_USERNAME # variável de ambiente para o nome do usuário root
           valueFrom:
             secretKeyRef:
               name: mongodb-secret
               key: mongo-root-username
-        - name: MONGO_INITDB_ROOT_PASSWORD
+        - name: MONGO_INITDB_ROOT_PASSWORD # variável de ambiente para a senha do usuário root
           valueFrom:
             secretKeyRef:
               name: mongodb-secret
               key: mongo-root-password
-        volumeMounts:
+        volumeMounts: # monta o volume persistente no container
         - name: mongodb-persistent-storage
           mountPath: /data/db # armazenamento do mongo
-      volumes:
+      volumes: # define os volumes que serão montados no pod
       - name: mongodb-persistent-storage
         persistentVolumeClaim:
           claimName: mongodb-pvc
 ---
 apiVersion: v1
 kind: Service
-metadata:
+metadata: # Define o serviço
   name: mongodb-service
   labels:
     app: mongodb
-spec:
+spec:     # Especifica o tipo de serviço
   selector:
     app: mongodb
   ports:
     - protocol: TCP
-      port: 27017         # Porta que o Service irá expor
-      targetPort: 27017   # Porta no container para onde o tráfego será redirecionado
-  type: ClusterIP         # Tipo de Service. ClusterIP é o padrão e expõe o Service apenas internamente no cluster.
+      port: 27017         # porta que o Service irá expor
+      targetPort: 27017   # porta no container para onde o tráfego será redirecionado
+  type: ClusterIP         # tipo do service
