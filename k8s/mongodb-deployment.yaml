@@ -1,40 +1,48 @@
-# Definição da versão da API do Kubernetes para Deployment
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-secret
+type: Opaque
+stringData: # Use stringData para dados que não precisam ser base64 encodados previamente
+  mongo-root-username: admin
+  mongo-root-password: password
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce # O volume pode ser montado como leitura/escrita por um único nó.
+  resources:
+    requests:
+      storage: 10Gi # Solicita 10 GB de armazenamento.
+---
 apiVersion: apps/v1
 kind: Deployment
-# Metadados do Deployment
 metadata:
-  name: mongodb-deploy # nome do deployment
-# Labels para identificar e organizar o recurso
+  name: mongodb-deployment
   labels:
     app: mongodb
-# Especificações do Deployment
 spec:
-  # Número de pods que devem estar rodando
-  replicas: 1
-  # Seletor que define quais pods este deployment gerencia
+  replicas: 1 # Número de réplicas do pod
   selector:
     matchLabels:
       app: mongodb
-  # Template para criação dos pods
   template:
-    # Metadados aplicados aos pods criados
     metadata:
       labels:
         app: mongodb
-    # Especificações dos pods
     spec:
-      # Lista de containers que rodarão no pod
       containers:
-      - name: mongodb         # nome do container
-        image: mongo:latest   # imagem do MongoDB
-        ports:                # portas do container
-        - containerPort: 27017 # porta padrão do MongoDB
-        env:                  
-        # Variáveis de ambiente
-        - name: MONGO_INITDB_ROOT_USERNAME  
-          value: root
-          valueFrom: 
-            secretKeyRef: 
+      - name: mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
               name: mongodb-secret
               key: mongo-root-username
         - name: MONGO_INITDB_ROOT_PASSWORD
@@ -42,20 +50,25 @@ spec:
             secretKeyRef:
               name: mongodb-secret
               key: mongo-root-password
+        volumeMounts:
+        - name: mongodb-persistent-storage
+          mountPath: /data/db # armazenamento do mongo
+      volumes:
+      - name: mongodb-persistent-storage
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
 ---
-# Service para expor o MongoDB para outros pods no cluster
 apiVersion: v1
 kind: Service
-# Metadados do Service
 metadata:
-  name: mongodb # nome do service
-# Especificações do Service
+  name: mongodb-service
+  labels:
+    app: mongodb
 spec:
   selector:
-    # Seletor para conectar com os pods corretos
     app: mongodb
-  ports: 
-  # Configuração das portas
-    - protocol: TCP     # protocolo de comunicação
-      port: 27017       # porta dentro do container
-      targetPort: 27017 # porta do container
+  ports:
+    - protocol: TCP
+      port: 27017         # Porta que o Service irá expor
+      targetPort: 27017   # Porta no container para onde o tráfego será redirecionado
+  type: ClusterIP         # Tipo de Service. ClusterIP é o padrão e expõe o Service apenas internamente no cluster.

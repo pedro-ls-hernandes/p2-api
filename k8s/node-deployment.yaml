@@ -4,7 +4,7 @@ kind: Deployment
 # Metadados do Deployment
 metadata:
   # Nome do deployment no namespace
-  name: nodeapp-deploy
+  name: backend-deploy
   # Labels para identificar e organizar o recurso
   labels:
     app: nodeapp
@@ -31,7 +31,8 @@ spec:
           image: pedrolshernandes/api-p2:latest #meuusergithub/repositorio:tag
           # Portas expostas pelo container
           ports:
-            - containerPort: 5000
+            - containerPort: 5000 #porta do container
+
 ---
 # Service para expor a aplicação Node.js para fora do cluster
 apiVersion: v1
@@ -39,7 +40,7 @@ kind: Service
 # Metadados do Service
 metadata:
   # Nome do service
-  name: nodeapp
+  name: backend
 # Especificações do Service
 spec:
   # Tipo NodePort para expor externamente com porta específica
@@ -48,7 +49,7 @@ spec:
   ports:
     - port: 5000               #porta dentro do container
       targetPort: 5000         #porta do container
-      nodePort: 30080        #porta no host(mapeada)
+      nodePort: 30085        #porta no host(mapeada)
   # Seletor para conectar com os pods corretos
   selector:
     app: nodeapp #conecta com os pods
